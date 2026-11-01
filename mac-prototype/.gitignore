@@ -1,0 +1,8 @@
+dinov2-small.onnx
+dinov2-small.onnx.data
+faiss.index
+metadata.json
+.venv/
+__pycache__/
+*.pyc
+.venv/
