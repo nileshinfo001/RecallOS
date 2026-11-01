@@ -1,5 +1,10 @@
+yolov8n.pt
 dinov2-small.onnx
 dinov2-small.onnx.data
+dinov2-base.onnx
+dinov2-base.onnx.data
+faiss_small.index
+faiss_base.index
 faiss.index
 metadata.json
 .venv/

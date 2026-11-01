@@ -6,3 +6,8 @@ onnxruntime
 faiss-cpu
 pillow
 numpy
+ultralytics
+opencv-python
+matplotlib
+openai-whisper
+sounddevice
