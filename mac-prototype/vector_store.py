@@ -88,6 +88,37 @@ class VectorStore:
             hits.append(entry)
         return hits
 
+    def _without_label(self, records: list[dict[str, Any]], index, dim: int, label: str):
+        """Drop every vector whose label matches, and rebuild that FAISS index."""
+        faiss = _faiss()
+        kept_records: list[dict[str, Any]] = []
+        vectors: list[np.ndarray] = []
+        removed = 0
+        for i, record in enumerate(records):
+            if str(record.get("label", "")).strip().lower() == label:
+                removed += 1
+                continue
+            kept_records.append(record)
+            vectors.append(np.asarray(index.reconstruct(int(i)), dtype=np.float32))
+        rebuilt = faiss.IndexFlatIP(dim)
+        if vectors:
+            matrix = np.stack(vectors, axis=0).astype(np.float32)
+            faiss.normalize_L2(matrix)
+            rebuilt.add(matrix)
+        return kept_records, rebuilt, removed
+
+    def drop_label(self, label: str) -> int:
+        """Remove a label from both indexes. One centroid per remaining label."""
+        target = label.strip().lower()
+        self.small_records, self.small_index, small_removed = self._without_label(
+            self.small_records, self.small_index, SMALL_DIM, target
+        )
+        self.base_records, self.base_index, base_removed = self._without_label(
+            self.base_records, self.base_index, BASE_DIM, target
+        )
+        self.save()
+        return small_removed + base_removed
+
     def save(self) -> None:
         faiss = _faiss()
         faiss.write_index(self.small_index, str(self.small_index_path))

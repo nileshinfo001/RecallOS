@@ -109,7 +109,9 @@ def enroll_video(video_path: str, label: str) -> None:
 
     centroid, variance = centroid_and_variance(kept)
     # Embeddings are ready, so FAISS loads after YOLO.
+    # One centroid per label: a new enroll replaces the previous one.
     store = VectorStore()
+    store.drop_label(label)
     store.add(
         id=str(uuid.uuid4()),
         embedding=centroid,
@@ -136,11 +138,27 @@ def enroll_video(video_path: str, label: str) -> None:
     print("  python3 recall.py --image data/unrelated.jpg --threshold 0.4")
 
 
+def forget_label(label: str) -> None:
+    """Remove a label from metadata.json and rebuild faiss_small.index."""
+    store = VectorStore()
+    removed = store.drop_label(label)
+    if removed == 0:
+        print(f"No memory labeled {label}")
+        return
+    print(f"Forgot {label}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Enroll a bottle video as one diverse centroid")
-    parser.add_argument("--video", required=True, help="Path to the object video")
-    parser.add_argument("--label", required=True, help="Human-readable name (display only)")
+    parser.add_argument("--video", default=None, help="Path to the object video")
+    parser.add_argument("--label", default=None, help="Human-readable name (display only)")
+    parser.add_argument("--forget", default=None, help="Remove this label and rebuild the index")
     args = parser.parse_args()
+    if args.forget:
+        forget_label(args.forget)
+        return
+    if not args.video or not args.label:
+        parser.error("Provide --video and --label, or --forget")
     enroll_video(args.video, args.label)
 
 
