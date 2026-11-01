@@ -4,6 +4,20 @@ import os
 from datetime import datetime
 
 import cv2
+import numpy as np
+from PIL import Image
+
+_IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".webp", ".bmp")
+
+
+def _read_bgr(source_path: str):
+    """Load any still image. cv2.imread rejects some .jpeg files."""
+    if not os.path.isfile(source_path):
+        raise FileNotFoundError(f"Cannot read image: {source_path}")
+    if not source_path.lower().endswith(_IMAGE_EXTS):
+        raise ValueError(f"Unsupported image format: {source_path}")
+    rgb = np.asarray(Image.open(source_path).convert("RGB"))
+    return rgb[:, :, ::-1].copy()
 
 
 DATA_DIR = os.path.join(".", "data")
@@ -46,9 +60,7 @@ def capture_from_file(source_path: str, location: str = "bedroom") -> str:
     """
     os.makedirs(DATA_DIR, exist_ok=True)
 
-    frame = cv2.imread(source_path)
-    if frame is None:
-        raise FileNotFoundError(f"Cannot read image: {source_path}")
+    frame = _read_bgr(source_path)
 
     now = datetime.now()
     date_str = now.strftime("%d-%m-%Y")

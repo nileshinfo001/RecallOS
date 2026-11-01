@@ -10,6 +10,19 @@ from pathlib import Path
 from typing import Any
 
 import cv2
+import numpy as np
+from PIL import Image
+
+_IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".webp", ".bmp")
+
+
+def _read_bgr(image_path: str):
+    if not os.path.isfile(image_path):
+        raise FileNotFoundError(f"Cannot read image: {image_path}")
+    if not image_path.lower().endswith(_IMAGE_EXTS):
+        raise ValueError(f"Unsupported image format: {image_path}")
+    rgb = np.asarray(Image.open(image_path).convert("RGB"))
+    return rgb[:, :, ::-1].copy()
 
 THUMBS_DIR = os.path.join(".", "data", "thumbs")
 
@@ -34,9 +47,7 @@ def segment_objects(image_path: str) -> list[dict[str, Any]]:
     """
     os.makedirs(THUMBS_DIR, exist_ok=True)
 
-    image = cv2.imread(image_path)
-    if image is None:
-        raise FileNotFoundError(f"Cannot read image: {image_path}")
+    image = _read_bgr(image_path)
 
     h, w = image.shape[:2]
     detections = detect_objects(image_path)

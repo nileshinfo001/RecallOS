@@ -30,12 +30,17 @@ def ensure_dirs() -> None:
     os.makedirs(SAMPLES_DIR, exist_ok=True)
 
 
+_IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".webp", ".bmp")
+
+
+def _is_image(path: str) -> bool:
+    return path.lower().endswith(_IMAGE_EXTS)
+
+
 def gather_images() -> list[str]:
     """Prefer sample images; fall back to live camera captures."""
     samples = sorted(
-        glob.glob(os.path.join(SAMPLES_DIR, "*.jpg"))
-        + glob.glob(os.path.join(SAMPLES_DIR, "*.jpeg"))
-        + glob.glob(os.path.join(SAMPLES_DIR, "*.png"))
+        path for path in glob.glob(os.path.join(SAMPLES_DIR, "*")) if _is_image(path)
     )
 
     paths: list[str] = []
